@@ -1,0 +1,267 @@
+{
+  "entities": {
+    "StudentProfile": {
+      "title": "StudentProfile",
+      "description": "Private student profile tracking cloud sync metadata and first-submission registration.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "hasRecordedSubmission": {
+          "type": "boolean"
+        },
+        "totalCompleted": {
+          "type": "integer"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "displayName", "hasRecordedSubmission", "totalCompleted", "createdAt", "updatedAt"]
+    },
+    "ActiveExamAttempt": {
+      "title": "ActiveExamAttempt",
+      "description": "In-progress exam paper saved continuously so a student can exit and resume later across sessions or devices.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "sessionId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["full", "section", "custom", "retry-incorrect"]
+        },
+        "sectionId": {
+          "type": "string",
+          "maxLength": 8
+        },
+        "questionIds": {
+          "type": "array"
+        },
+        "answers": {
+          "type": "object"
+        },
+        "flagged": {
+          "type": "array"
+        },
+        "hintsViewed": {
+          "type": "array"
+        },
+        "currentIndex": {
+          "type": "integer"
+        },
+        "durationSeconds": {
+          "type": "integer"
+        },
+        "remainingSeconds": {
+          "type": "integer"
+        },
+        "passThresholdPercent": {
+          "type": "integer"
+        },
+        "shuffleQuestions": {
+          "type": "boolean"
+        },
+        "startedAtMs": {
+          "type": "integer"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "userId",
+        "sessionId",
+        "title",
+        "mode",
+        "questionIds",
+        "answers",
+        "flagged",
+        "hintsViewed",
+        "currentIndex",
+        "durationSeconds",
+        "remainingSeconds",
+        "passThresholdPercent",
+        "shuffleQuestions",
+        "startedAtMs",
+        "updatedAt"
+      ]
+    },
+    "CompletedAttempt": {
+      "title": "CompletedAttempt",
+      "description": "Immutable completed exam record with answers, flags, hints used, and final score.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "sessionId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["full", "section", "custom", "retry-incorrect"]
+        },
+        "totalQuestions": {
+          "type": "integer"
+        },
+        "answeredCount": {
+          "type": "integer"
+        },
+        "correctCount": {
+          "type": "integer"
+        },
+        "scorePercent": {
+          "type": "integer"
+        },
+        "passed": {
+          "type": "boolean"
+        },
+        "timeSpentSeconds": {
+          "type": "integer"
+        },
+        "hintsUsedCount": {
+          "type": "integer"
+        },
+        "incorrectIds": {
+          "type": "array"
+        },
+        "questionIds": {
+          "type": "array"
+        },
+        "answers": {
+          "type": "object"
+        },
+        "flagged": {
+          "type": "array"
+        },
+        "hintsViewed": {
+          "type": "array"
+        },
+        "passThresholdPercent": {
+          "type": "integer"
+        },
+        "submittedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "userId",
+        "sessionId",
+        "title",
+        "mode",
+        "totalQuestions",
+        "answeredCount",
+        "correctCount",
+        "scorePercent",
+        "passed",
+        "timeSpentSeconds",
+        "hintsUsedCount",
+        "incorrectIds",
+        "questionIds",
+        "answers",
+        "flagged",
+        "hintsViewed",
+        "passThresholdPercent",
+        "submittedAt"
+      ]
+    },
+    "GlobalDashboardStats": {
+      "title": "GlobalDashboardStats",
+      "description": "Privacy-safe aggregate participation metrics across all students (no PII).",
+      "type": "object",
+      "properties": {
+        "totalSubmissions": {
+          "type": "integer"
+        },
+        "uniqueStudentsCount": {
+          "type": "integer"
+        },
+        "fullExamSubmissions": {
+          "type": "integer"
+        },
+        "passedSubmissions": {
+          "type": "integer"
+        },
+        "totalScoreSum": {
+          "type": "integer"
+        },
+        "sectionCounts": {
+          "type": "object"
+        },
+        "sectionScoreSums": {
+          "type": "object"
+        },
+        "recentActivity": {
+          "type": "array"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "totalSubmissions",
+        "uniqueStudentsCount",
+        "fullExamSubmissions",
+        "passedSubmissions",
+        "totalScoreSum",
+        "sectionCounts",
+        "sectionScoreSums",
+        "recentActivity",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/StudentProfile" },
+      "description": "Student profile document owned strictly by the authenticated user."
+    },
+    "/users/{userId}/activeAttempts/{sessionId}": {
+      "schema": { "$ref": "#/entities/ActiveExamAttempt" },
+      "description": "Saved in-progress exam attempts for resuming across sessions."
+    },
+    "/users/{userId}/attempts/{sessionId}": {
+      "schema": { "$ref": "#/entities/CompletedAttempt" },
+      "description": "Completed exam records owned strictly by the authenticated user."
+    },
+    "/stats/global": {
+      "schema": { "$ref": "#/entities/GlobalDashboardStats" },
+      "description": "Aggregate non-PII student participation dashboard document."
+    }
+  }
+}

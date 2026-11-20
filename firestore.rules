@@ -1,0 +1,296 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidMode(mode) {
+      return mode in ['full', 'section', 'custom', 'retry-incorrect'];
+    }
+
+    function isValidStudentProfile(data, userId) {
+      return data.keys().hasAll(['uid', 'displayName', 'hasRecordedSubmission', 'totalCompleted', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'displayName', 'hasRecordedSubmission', 'totalCompleted', 'createdAt', 'updatedAt'])
+        && data.uid is string
+        && data.uid == userId
+        && isValidId(data.uid)
+        && data.displayName is string
+        && data.displayName.size() >= 1
+        && data.displayName.size() <= 80
+        && data.hasRecordedSubmission is bool
+        && data.totalCompleted is int
+        && data.totalCompleted >= 0
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidActiveAttempt(data, userId, sessionId) {
+      return data.keys().hasAll([
+          'userId', 'sessionId', 'title', 'mode', 'questionIds', 'answers',
+          'flagged', 'hintsViewed', 'currentIndex', 'durationSeconds',
+          'remainingSeconds', 'passThresholdPercent', 'shuffleQuestions',
+          'startedAtMs', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'userId', 'sessionId', 'title', 'mode', 'sectionId', 'questionIds', 'answers',
+          'flagged', 'hintsViewed', 'currentIndex', 'durationSeconds',
+          'remainingSeconds', 'passThresholdPercent', 'shuffleQuestions',
+          'startedAtMs', 'updatedAt'
+        ])
+        && data.userId is string
+        && data.userId == userId
+        && isValidId(data.userId)
+        && data.sessionId is string
+        && data.sessionId == sessionId
+        && isValidId(data.sessionId)
+        && data.title is string
+        && data.title.size() >= 1
+        && data.title.size() <= 160
+        && isValidMode(data.mode)
+        && (!('sectionId' in data) || (data.sectionId is string && data.sectionId.size() <= 8))
+        && data.questionIds is list
+        && data.questionIds.size() >= 1
+        && data.questionIds.size() <= 189
+        && data.questionIds[0] is int
+        && data.answers is map
+        && data.answers.size() <= 189
+        && data.flagged is list
+        && data.flagged.size() <= 189
+        && (data.flagged.size() == 0 || data.flagged[0] is int)
+        && data.hintsViewed is list
+        && data.hintsViewed.size() <= 189
+        && (data.hintsViewed.size() == 0 || data.hintsViewed[0] is int)
+        && data.currentIndex is int
+        && data.currentIndex >= 0
+        && data.currentIndex < 189
+        && data.durationSeconds is int
+        && data.durationSeconds >= 0
+        && data.durationSeconds <= 28800
+        && data.remainingSeconds is int
+        && data.remainingSeconds >= 0
+        && data.remainingSeconds <= 28800
+        && data.passThresholdPercent is int
+        && data.passThresholdPercent >= 1
+        && data.passThresholdPercent <= 100
+        && data.shuffleQuestions is bool
+        && data.startedAtMs is int
+        && data.startedAtMs > 0
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidCompletedAttempt(data, userId, sessionId) {
+      return data.keys().hasAll([
+          'userId', 'sessionId', 'title', 'mode', 'totalQuestions', 'answeredCount',
+          'correctCount', 'scorePercent', 'passed', 'timeSpentSeconds', 'hintsUsedCount',
+          'incorrectIds', 'questionIds', 'answers', 'flagged', 'hintsViewed',
+          'passThresholdPercent', 'submittedAt'
+        ])
+        && data.keys().hasOnly([
+          'userId', 'sessionId', 'title', 'mode', 'sectionId', 'totalQuestions', 'answeredCount',
+          'correctCount', 'scorePercent', 'passed', 'timeSpentSeconds', 'hintsUsedCount',
+          'incorrectIds', 'questionIds', 'answers', 'flagged', 'hintsViewed',
+          'passThresholdPercent', 'submittedAt'
+        ])
+        && data.userId is string
+        && data.userId == userId
+        && isValidId(data.userId)
+        && data.sessionId is string
+        && data.sessionId == sessionId
+        && isValidId(data.sessionId)
+        && data.title is string
+        && data.title.size() >= 1
+        && data.title.size() <= 160
+        && isValidMode(data.mode)
+        && (!('sectionId' in data) || (data.sectionId is string && data.sectionId.size() <= 8))
+        && data.totalQuestions is int
+        && data.totalQuestions >= 1
+        && data.totalQuestions <= 189
+        && data.answeredCount is int
+        && data.answeredCount >= 0
+        && data.answeredCount <= 189
+        && data.correctCount is int
+        && data.correctCount >= 0
+        && data.correctCount <= 189
+        && data.scorePercent is int
+        && data.scorePercent >= 0
+        && data.scorePercent <= 100
+        && data.passed is bool
+        && data.timeSpentSeconds is int
+        && data.timeSpentSeconds >= 0
+        && data.timeSpentSeconds <= 86400
+        && data.hintsUsedCount is int
+        && data.hintsUsedCount >= 0
+        && data.hintsUsedCount <= 189
+        && data.incorrectIds is list
+        && data.incorrectIds.size() <= 189
+        && (data.incorrectIds.size() == 0 || data.incorrectIds[0] is int)
+        && data.questionIds is list
+        && data.questionIds.size() >= 1
+        && data.questionIds.size() <= 189
+        && data.questionIds[0] is int
+        && data.answers is map
+        && data.answers.size() <= 189
+        && data.flagged is list
+        && data.flagged.size() <= 189
+        && (data.flagged.size() == 0 || data.flagged[0] is int)
+        && data.hintsViewed is list
+        && data.hintsViewed.size() <= 189
+        && (data.hintsViewed.size() == 0 || data.hintsViewed[0] is int)
+        && data.passThresholdPercent is int
+        && data.passThresholdPercent >= 1
+        && data.passThresholdPercent <= 100
+        && data.submittedAt is timestamp;
+    }
+
+    function isValidGlobalStats(data) {
+      return data.keys().hasAll([
+          'totalSubmissions', 'uniqueStudentsCount', 'fullExamSubmissions',
+          'passedSubmissions', 'totalScoreSum', 'sectionCounts', 'sectionScoreSums',
+          'recentActivity', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'totalSubmissions', 'uniqueStudentsCount', 'fullExamSubmissions',
+          'passedSubmissions', 'totalScoreSum', 'sectionCounts', 'sectionScoreSums',
+          'recentActivity', 'updatedAt'
+        ])
+        && data.totalSubmissions is int
+        && data.totalSubmissions >= 0
+        && data.uniqueStudentsCount is int
+        && data.uniqueStudentsCount >= 0
+        && data.fullExamSubmissions is int
+        && data.fullExamSubmissions >= 0
+        && data.passedSubmissions is int
+        && data.passedSubmissions >= 0
+        && data.totalScoreSum is int
+        && data.totalScoreSum >= 0
+        && data.sectionCounts is map
+        && data.sectionCounts.keys().hasOnly(['A', 'B', 'C', 'D', 'E', 'F'])
+        && data.sectionScoreSums is map
+        && data.sectionScoreSums.keys().hasOnly(['A', 'B', 'C', 'D', 'E', 'F'])
+        && data.recentActivity is list
+        && data.recentActivity.size() <= 15
+        && (data.recentActivity.size() == 0 || data.recentActivity[0] is map)
+        && data.updatedAt is timestamp;
+    }
+
+    match /users/{userId} {
+      allow get: if isValidId(userId) && isOwner(userId);
+      allow list: if false;
+      allow create: if isValidId(userId)
+        && isOwner(userId)
+        && isVerifiedUser()
+        && isValidStudentProfile(incoming(), userId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(userId)
+        && isOwner(userId)
+        && isVerifiedUser()
+        && isValidStudentProfile(incoming(), userId)
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'displayName', 'hasRecordedSubmission', 'totalCompleted', 'updatedAt'
+        ]);
+      allow delete: if false;
+
+      match /activeAttempts/{sessionId} {
+        allow get: if isValidId(userId) && isValidId(sessionId) && isOwner(userId);
+        allow list: if isValidId(userId) && isOwner(userId) && resource.data.userId == request.auth.uid;
+        allow create: if isValidId(userId)
+          && isValidId(sessionId)
+          && isOwner(userId)
+          && isVerifiedUser()
+          && isValidActiveAttempt(incoming(), userId, sessionId)
+          && incoming().updatedAt == request.time;
+        allow update: if isValidId(userId)
+          && isValidId(sessionId)
+          && isOwner(userId)
+          && isVerifiedUser()
+          && isValidActiveAttempt(incoming(), userId, sessionId)
+          && incoming().userId == existing().userId
+          && incoming().sessionId == existing().sessionId
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly([
+            'title', 'mode', 'sectionId', 'questionIds', 'answers', 'flagged',
+            'hintsViewed', 'currentIndex', 'durationSeconds', 'remainingSeconds',
+            'passThresholdPercent', 'shuffleQuestions', 'startedAtMs', 'updatedAt'
+          ]);
+        allow delete: if isValidId(userId) && isValidId(sessionId) && isOwner(userId);
+      }
+
+      match /attempts/{sessionId} {
+        allow get: if isValidId(userId) && isValidId(sessionId) && isOwner(userId);
+        allow list: if isValidId(userId) && isOwner(userId) && resource.data.userId == request.auth.uid;
+        allow create: if isValidId(userId)
+          && isValidId(sessionId)
+          && isOwner(userId)
+          && isVerifiedUser()
+          && isValidCompletedAttempt(incoming(), userId, sessionId)
+          && incoming().submittedAt == request.time;
+        allow update: if false;
+        allow delete: if isValidId(userId) && isValidId(sessionId) && isOwner(userId);
+      }
+    }
+
+    match /stats/global {
+      allow get: if true;
+      allow list: if false;
+      allow create: if isVerifiedUser()
+        && isValidGlobalStats(incoming())
+        && incoming().totalSubmissions == 1
+        && incoming().uniqueStudentsCount == 1
+        && incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser()
+        && isValidGlobalStats(incoming())
+        && incoming().updatedAt == request.time
+        && incoming().totalSubmissions == existing().totalSubmissions + 1
+        && incoming().uniqueStudentsCount >= existing().uniqueStudentsCount
+        && incoming().uniqueStudentsCount <= existing().uniqueStudentsCount + 1
+        && incoming().fullExamSubmissions >= existing().fullExamSubmissions
+        && incoming().fullExamSubmissions <= existing().fullExamSubmissions + 1
+        && incoming().passedSubmissions >= existing().passedSubmissions
+        && incoming().passedSubmissions <= existing().passedSubmissions + 1
+        && incoming().totalScoreSum >= existing().totalScoreSum
+        && incoming().totalScoreSum <= existing().totalScoreSum + 100
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'totalSubmissions', 'uniqueStudentsCount', 'fullExamSubmissions',
+          'passedSubmissions', 'totalScoreSum', 'sectionCounts', 'sectionScoreSums',
+          'recentActivity', 'updatedAt'
+        ]);
+      allow delete: if false;
+    }
+
+    // Connection check document (read-only ping)
+    match /test/connection {
+      allow get: if true;
+      allow list, write: if false;
+    }
+  }
+}
